@@ -21,7 +21,7 @@ Open `config/main.php` and add cloudinary:
         ...
     ),
     ...
-``
+```
 
 ### Uploading to Cloudinary
 
