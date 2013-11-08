@@ -100,7 +100,7 @@ class ECloudinary extends Cloudinary {
     // Cloudinary Library methods call
     //***************************************************************************
     public function upload($file, $options = array()) {
-        \Cloudinary\Uploader::upload($file, $options);
+        return \Cloudinary\Uploader::upload($file, $options);
     }
 
     //***************************************************************************
