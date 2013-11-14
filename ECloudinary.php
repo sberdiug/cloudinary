@@ -99,13 +99,84 @@ class ECloudinary extends Cloudinary {
     //***************************************************************************
     // Cloudinary Library methods call
     //***************************************************************************
-    public function upload($file, $options = array()) {
-        return \Cloudinary\Uploader::upload($file, $options);
+// Examples
+// cl_image_tag("israel.png", array("width"=>100, "height"=>100, "alt"=>"hello") # W/H are not sent to cloudinary
+// cl_image_tag("israel.png", array("width"=>100, "height"=>100, "alt"=>"hello", "crop"=>"fit") # W/H are sent to cloudinary
+    public function cl_image_tag($source, $options = array()) {
+        $source = $this->cloudinary_url_internal($source, $options);
+        if (isset($options["html_width"]))
+            $options["width"] = self::option_consume($options, "html_width");
+        if (isset($options["html_height"]))
+            $options["height"] = self::option_consume($options, "html_height");
+
+        return "<img src='" . $source . "' " . self::html_attrs($options) . "/>";
+    }
+
+    public function fetch_image_tag($url, $options = array()) {
+        $options["type"] = "fetch";
+        return $this->cl_image_tag($url, $options);
+    }
+
+    public function facebook_profile_image_tag($profile, $options = array()) {
+        $options["type"] = "facebook";
+        return $this->cl_image_tag($profile, $options);
+    }
+
+    public function gravatar_profile_image_tag($email, $options = array()) {
+        $options["type"] = "gravatar";
+        $options["format"] = "jpg";
+        return $this->cl_image_tag(md5(strtolower(trim($email))), $options);
+    }
+
+    public function twitter_profile_image_tag($profile, $options = array()) {
+        $options["type"] = "twitter";
+        return $this->cl_image_tag($profile, $options);
+    }
+
+    public function twitter_name_profile_image_tag($profile, $options = array()) {
+        $options["type"] = "twitter_name";
+        return $this->cl_image_tag($profile, $options);
+    }
+
+    public function cloudinary_js_config() {
+        $params = array();
+        foreach (self::$JS_CONFIG_PARAMS as $param) {
+            $value = self::config_get($param);
+            if ($value)
+                $params[$param] = $value;
+        }
+        return "<script type='text/javascript'>\n" .
+                "$.cloudinary.config(" . json_encode($params) . ");\n" .
+                "</script>\n";
+    }
+
+    /* public function cloudinary_url($source, $options = array()) {
+      return $this->cloudinary_url_internal($source, $options);
+      } */
+
+    public function cloudinary_url_internal($source, &$options = array()) {
+        if (!isset($options["secure"]))
+            $options["secure"] = ( isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on' );
+
+        return self::cloudinary_url($source, $options);
+    }
+
+    public function cl_sprite_url($tag, $options = array()) {
+        if (substr($tag, -strlen(".css")) != ".css") {
+            $options["format"] = "css";
+        }
+        $options["type"] = "sprite";
+        return $this->cloudinary_url_internal($tag, $options);
+    }
+
+    public function cl_sprite_tag($tag, $options = array()) {
+        return "<link rel='stylesheet' type='text/css' href='" . $this->cl_sprite_url($tag, $options) . "'>";
     }
 
     //***************************************************************************
     // Magic
     //***************************************************************************
+    private $_cl_uploader = 'Cloudinary\Uploader';
 
     /**
      * Call a PHPMailer function
@@ -115,10 +186,11 @@ class ECloudinary extends Cloudinary {
      * @return mixed
      */
     public function __call($method, $params) {
-        if (is_object($this->_myMailer) && get_class($this->_myMailer) === 'PHPMailer') {
-            return call_user_func_array(array($this->_myMailer, $method), $params);
+        $m = "$this->_cl_uploader::$method";
+        if (is_callable($m)) {
+            return call_user_func_array($m, $params);
         } else {
-            throw new CException(Yii::t('ECloudinary', 'Can not call a method of a non existent object'));
+            throw new CException(Yii::t('ECloudinary', "Requested method does not exist for in $this->_cl_uploader"));
         }
     }
 
