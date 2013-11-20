@@ -65,6 +65,7 @@ class ECloudinary extends Cloudinary {
     public $base_delivery_url = 'http://res.cloudinary.com/';
     public $secure_delivery_url = 'https://res.cloudinary.com/';
     public $api_base_url = 'https://api.cloudinary.com/v1_1/';
+    public $access_url;
 
     //***************************************************************************
     // Initialization
@@ -88,6 +89,7 @@ class ECloudinary extends Cloudinary {
         $this->base_delivery_url .= $this->cloud_name;
         $this->secure_delivery_url .= $this->cloud_name;
         $this->api_base_url .= $this->cloud_name;
+        $this->access_url = "$this->base_delivery_url/image/upload/";
 
         \Cloudinary::config(array(
             'cloud_name' => $this->cloud_name,
